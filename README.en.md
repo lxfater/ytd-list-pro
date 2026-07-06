@@ -27,11 +27,15 @@
 
 ## How to Use
 
-Three steps to get started (the extension UI is in Chinese; English equivalents in parentheses):
+![How to use](assets/help.png)
 
-1. **Open the manager panel** — after installation, a switcher appears at the top of the YouTube sidebar with three buttons: 原始 (Original) / 分类 (Categories) / 管理 (Manage). Click 管理 (Manage) to open the category manager drawer.
-2. **Sync and organize your channels** — in the manager panel, click 刷新频道 (Refresh channels) to pull in your subscriptions. **After subscribing to a new creator, remember to click refresh again — the new channel only shows up in the list after a refresh.** Create categories with 新建 (New), then tick channels and click 移动 (Move) — or simply drag them — to file them into categories. The search box at the top finds channels across all categories.
-3. **Switch categories in the sidebar** — back in the left sidebar, switch to 分类 (Categories) mode and click any category to expand and browse its channels — no more scrolling through one long, messy subscription list.
+Follow steps ①②③ in the screenshot (the extension UI is in Chinese; English equivalents in parentheses):
+
+1. **Open the manager panel** (① in the screenshot) — after installation, a switcher appears at the top of the YouTube sidebar with three buttons: 原始 (Original) / 分类 (Categories) / 管理 (Manage). Click 管理 (Manage) to open the category manager panel.
+2. **Create categories and organize channels** (②) — click 新建 (New) to create your own categories, then tick channels and click 移动 (Move) — or simply drag them — to file them into categories. The search box at the top finds channels across all categories.
+3. **Refresh channels** (③) — on first use, click 刷新频道 (Refresh channels) to pull in your subscriptions. **Whenever you subscribe to a new creator and don't see them in the list, click refresh and they will appear.**
+
+Once organized, switch the left sidebar to 分类 (Categories) mode and click any category to browse its channels — no more scrolling through one long, messy subscription list. There is an even faster way in daily use: on any watch or channel page, an 加入分类 (Add to category) button appears next to the subscribe button — click it and pick a category, no manager panel needed.
 
 There is an even faster way in daily use: on any watch page or channel page, an 加入分类 (Add to category) button appears next to the subscribe button. Click it and pick a category — done, without ever opening the manager panel.
 
