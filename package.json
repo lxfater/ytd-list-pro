@@ -1,0 +1,30 @@
+{
+  "name": "ytd-list-pro",
+  "version": "0.1.0",
+  "license": "MIT",
+  "type": "module",
+  "description": "YouTube subscription category manager extension.",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "node scripts/build.mjs",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest"
+  },
+  "dependencies": {
+    "lucide-react": "^1.23.0",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.2.2",
+    "@types/node": "^26.1.0",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.3",
+    "esbuild": "^0.28.1",
+    "jsdom": "^29.1.1",
+    "typescript": "^6.0.3",
+    "vite": "^8.1.3",
+    "vitest": "^4.1.9"
+  }
+}

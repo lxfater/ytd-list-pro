@@ -1,0 +1,15 @@
+node_modules/
+dist/
+coverage/
+.DS_Store
+*.log
+*.tsbuildinfo
+.env
+.env.*
+*.local
+*storage*.json
+*subscriptions*.json
+*cookies*.txt
+
+# Internal development notes, not for publishing
+docs/plans/
