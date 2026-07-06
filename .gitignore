@@ -13,3 +13,6 @@ coverage/
 
 # Internal development notes, not for publishing
 docs/plans/
+
+# Release archives
+*.zip
