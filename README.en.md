@@ -28,6 +28,7 @@
 - **Global search** — search across all categories with multiple keywords in any order; results are tagged with their category.
 - **Bulk management** — multi-select, bulk move, drag-and-drop, and flexible sorting in the manager panel.
 - **Multi-account isolation** — each YouTube account keeps its own categories; switching accounts never mixes data. Data from older versions is migrated automatically to the first account used after upgrading.
+- **New-video indicator** — a background poll checks each subscribed channel's public RSS feed on a schedule; channels with an unseen new upload show a small red dot on their avatar in the sidebar, which clears once you open the channel. It only tracks uploads published after the feature started tracking that channel — it is not the same as YouTube's own "unwatched" status.
 - **Import / Export** — export all categories to a CSV file (opens directly in Excel) and bulk-import from CSV.
 - **Local-first** — all state lives in `chrome.storage.local`; there is no backend.
 
@@ -103,6 +104,7 @@ npm run build       # build to dist/
 - Subscription data is read in the active YouTube tab using your existing YouTube session and stored only in local browser storage.
 - There is no backend service; subscription lists are never uploaded to any third-party server.
 - The content script reads YouTube page configuration solely to call YouTube's own internal subscription endpoint from the YouTube origin; no cookie values are logged, committed, or sent outside YouTube.
+- The new-video indicator calls YouTube's public RSS endpoint (`youtube.com/feeds/videos.xml`) — no login or cookies required — solely to compare upload timestamps. Results are stored locally only.
 
 ## License
 

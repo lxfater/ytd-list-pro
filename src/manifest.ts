@@ -5,7 +5,7 @@ export const manifest: chrome.runtime.ManifestV3 = {
   name: "YTD List Pro",
   version: "0.1.0",
   description: "Organize YouTube subscriptions into visual categories.",
-  permissions: ["storage", "tabs", "scripting"],
+  permissions: ["storage", "tabs", "scripting", "alarms"],
   host_permissions: ["https://www.youtube.com/*", ...AVATAR_HOST_PERMISSIONS],
   content_security_policy: {
     extension_pages:

@@ -4,6 +4,7 @@ import {
   deleteCategory,
   getChannelsForCategory,
   importChannelsToCategories,
+  markChannelSeen,
   mergeSubscriptions,
   moveChannels,
   renameCategory,
@@ -182,6 +183,12 @@ const toggleSection = (categoryId: string) => {
 };
 
 const openChannel = (channel: Channel) => {
+  // Fire-and-forget: clears the channel's "new video" dot. Not awaited
+  // because the page is about to navigate away; chrome.storage.local.set is
+  // dispatched to the browser process immediately regardless.
+  void safeAsync(async () => {
+    currentState = await updateState((state) => markChannelSeen(state, channel.id));
+  });
   window.location.href = channel.url;
 };
 

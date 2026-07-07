@@ -125,7 +125,13 @@ export function mergeSubscriptions(
     return {
       ...channel,
       ...(subscribedAt === undefined ? {} : { subscribedAt }),
-      discoveredAt: channel.discoveredAt ?? existing?.discoveredAt ?? (existing ? 0 : syncedAt)
+      discoveredAt: channel.discoveredAt ?? existing?.discoveredAt ?? (existing ? 0 : syncedAt),
+      // A subscription refresh rebuilds `state.channels` from scratch, so feed
+      // tracking (new-upload dot) has to be carried over explicitly or it
+      // would silently reset every time the user clicks "刷新频道".
+      ...(existing?.latestVideoAt === undefined ? {} : { latestVideoAt: existing.latestVideoAt }),
+      ...(existing?.seenVideoAt === undefined ? {} : { seenVideoAt: existing.seenVideoAt }),
+      ...(existing?.feedCheckedAt === undefined ? {} : { feedCheckedAt: existing.feedCheckedAt })
     };
   });
   const incomingById = new Map(channelsWithDiscoveryTimes.map((channel) => [channel.id, channel]));
@@ -439,6 +445,81 @@ export function setSidebarMode(currentState: ExtensionState, mode: ExtensionStat
   const state = cloneState(currentState);
   state.ui.sidebarMode = mode;
   return state;
+}
+
+/**
+ * Real YouTube channel ids always start with "UC". Channels can also be
+ * stored under a synthetic `handle:xxx` fallback id (see youtube-parser.ts)
+ * before a full subscription sync resolves the canonical id; those aren't
+ * usable with the public feed endpoint, which only accepts channel ids.
+ */
+export function isFeedTrackableChannelId(channelId: string): boolean {
+  return channelId.startsWith("UC");
+}
+
+export function channelHasNewVideo(channel: Channel): boolean {
+  return (
+    typeof channel.latestVideoAt === "number" &&
+    typeof channel.seenVideoAt === "number" &&
+    channel.latestVideoAt > channel.seenVideoAt
+  );
+}
+
+/**
+ * Marks a channel's current latest video as acknowledged, clearing its dot.
+ * Falls back to `now` if we haven't learned a latest-video timestamp yet, so
+ * a manual open still counts as "seen" once a feed check eventually runs.
+ */
+export function markChannelSeen(currentState: ExtensionState, channelId: string, now = Date.now()): ExtensionState {
+  const channel = currentState.channels[channelId];
+  if (!channel) {
+    return currentState;
+  }
+  const state = cloneState(currentState);
+  state.channels[channelId] = {
+    ...channel,
+    seenVideoAt: channel.latestVideoAt ?? now
+  };
+  return state;
+}
+
+/**
+ * Records the result of polling one channel's feed. The first time a channel
+ * gets a result, `seenVideoAt` is seeded to that same timestamp so existing
+ * subscriptions don't all light up as "new" the moment tracking turns on —
+ * only uploads published after that baseline will show a dot.
+ */
+export function applyFeedCheckResult(
+  currentState: ExtensionState,
+  channelId: string,
+  latestVideoAt: number | undefined,
+  checkedAt = Date.now()
+): ExtensionState {
+  const channel = currentState.channels[channelId];
+  if (!channel) {
+    return currentState;
+  }
+  const state = cloneState(currentState);
+  const nextLatestVideoAt = latestVideoAt ?? channel.latestVideoAt;
+  state.channels[channelId] = {
+    ...channel,
+    feedCheckedAt: checkedAt,
+    ...(nextLatestVideoAt === undefined ? {} : { latestVideoAt: nextLatestVideoAt }),
+    seenVideoAt: channel.seenVideoAt ?? nextLatestVideoAt
+  };
+  return state;
+}
+
+/**
+ * Picks up to `limit` trackable channels to poll next, prioritizing the ones
+ * checked least recently (or never). Used to spread feed polling across
+ * repeated alarm ticks instead of fetching every subscription at once.
+ */
+export function pickChannelsForFeedCheck(state: ExtensionState, limit: number): Channel[] {
+  return Object.values(state.channels)
+    .filter((channel) => isFeedTrackableChannelId(channel.id))
+    .sort((a, b) => (a.feedCheckedAt ?? 0) - (b.feedCheckedAt ?? 0))
+    .slice(0, limit);
 }
 
 export function toggleCategoryExpanded(currentState: ExtensionState, categoryId: string): ExtensionState {

@@ -1,12 +1,17 @@
 import { describe, expect, it } from "vitest";
 import {
   addCategory,
+  applyFeedCheckResult,
   applyLegacyImportIfNeeded,
+  channelHasNewVideo,
   createEmptyState,
   deleteCategory,
   getChannelsForCategory,
+  isFeedTrackableChannelId,
+  markChannelSeen,
   mergeSubscriptions,
   moveChannels,
+  pickChannelsForFeedCheck,
   renameCategory,
   reorderCategories,
   getChannelCategoryId,
@@ -412,5 +417,78 @@ describe("importChannelsToCategories", () => {
     expect(Object.keys(outcome.state.channels)).toEqual(["UC-x"]);
     const categoryId = outcome.state.categoryOrder[0];
     expect(outcome.state.categories[categoryId]?.channelIds).toEqual(["UC-x"]);
+  });
+});
+
+describe("new-video tracking", () => {
+  it("treats a channel with no feed data yet as having no new video", () => {
+    const state = mergeSubscriptions(createEmptyState(), [channel("UC-a")], 10);
+    expect(channelHasNewVideo(state.channels["UC-a"])).toBe(false);
+  });
+
+  it("seeds seenVideoAt on the first feed check instead of flagging every channel as new", () => {
+    const state = mergeSubscriptions(createEmptyState(), [channel("UC-a")], 10);
+    const checked = applyFeedCheckResult(state, "UC-a", 100, 500);
+    expect(checked.channels["UC-a"]?.latestVideoAt).toBe(100);
+    expect(checked.channels["UC-a"]?.seenVideoAt).toBe(100);
+    expect(checked.channels["UC-a"]?.feedCheckedAt).toBe(500);
+    expect(channelHasNewVideo(checked.channels["UC-a"])).toBe(false);
+  });
+
+  it("flags a channel as having a new video once a later check finds a newer upload", () => {
+    const state = mergeSubscriptions(createEmptyState(), [channel("UC-a")], 10);
+    const baseline = applyFeedCheckResult(state, "UC-a", 100, 500);
+    const later = applyFeedCheckResult(baseline, "UC-a", 200, 900);
+    expect(channelHasNewVideo(later.channels["UC-a"])).toBe(true);
+  });
+
+  it("keeps the previous latestVideoAt when a feed check comes back empty", () => {
+    const state = mergeSubscriptions(createEmptyState(), [channel("UC-a")], 10);
+    const baseline = applyFeedCheckResult(state, "UC-a", 100, 500);
+    const failedCheck = applyFeedCheckResult(baseline, "UC-a", undefined, 900);
+    expect(failedCheck.channels["UC-a"]?.latestVideoAt).toBe(100);
+    expect(failedCheck.channels["UC-a"]?.feedCheckedAt).toBe(900);
+  });
+
+  it("clears the dot when the user opens the channel, using now() if no video has been fetched yet", () => {
+    const state = mergeSubscriptions(createEmptyState(), [channel("UC-a")], 10);
+    const withNewVideo = applyFeedCheckResult(applyFeedCheckResult(state, "UC-a", 100, 500), "UC-a", 200, 900);
+    expect(channelHasNewVideo(withNewVideo.channels["UC-a"])).toBe(true);
+
+    const seen = markChannelSeen(withNewVideo, "UC-a", 950);
+    expect(seen.channels["UC-a"]?.seenVideoAt).toBe(200);
+    expect(channelHasNewVideo(seen.channels["UC-a"])).toBe(false);
+
+    const seenWithoutFeedData = markChannelSeen(state, "UC-a", 950);
+    expect(seenWithoutFeedData.channels["UC-a"]?.seenVideoAt).toBe(950);
+  });
+
+  it("survives a subscription refresh instead of resetting on every 刷新频道", () => {
+    const state = mergeSubscriptions(createEmptyState(), [channel("UC-a")], 10);
+    const tracked = applyFeedCheckResult(applyFeedCheckResult(state, "UC-a", 100, 500), "UC-a", 200, 900);
+    const refreshed = mergeSubscriptions(tracked, [channel("UC-a", "A renamed")], 1000);
+    expect(refreshed.channels["UC-a"]?.latestVideoAt).toBe(200);
+    expect(refreshed.channels["UC-a"]?.seenVideoAt).toBe(100);
+    expect(refreshed.channels["UC-a"]?.feedCheckedAt).toBe(900);
+    expect(channelHasNewVideo(refreshed.channels["UC-a"])).toBe(true);
+  });
+
+  it("only considers canonical UC channel ids feed-trackable", () => {
+    expect(isFeedTrackableChannelId("UC1234567890")).toBe(true);
+    expect(isFeedTrackableChannelId("handle:sometim")).toBe(false);
+  });
+
+  it("prioritizes the least-recently-checked trackable channels, skipping handle-only ids", () => {
+    let state = mergeSubscriptions(createEmptyState(), [channel("UC-a"), channel("UC-b"), channel("UC-c")], 10);
+    state = applyFeedCheckResult(state, "UC-a", 100, 1000);
+    state = applyFeedCheckResult(state, "UC-b", 100, 200);
+    state = upsertChannelToCategory(
+      state,
+      { id: "handle:only", name: "Handle only", url: "https://www.youtube.com/@only" },
+      UNCATEGORIZED_ID
+    );
+
+    const picked = pickChannelsForFeedCheck(state, 2).map((entry) => entry.id);
+    expect(picked).toEqual(["UC-c", "UC-b"]);
   });
 });

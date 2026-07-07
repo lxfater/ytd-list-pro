@@ -1,5 +1,5 @@
 import { UNCATEGORIZED_ID } from "../shared/constants";
-import { getChannelsForCategory } from "../shared/state";
+import { channelHasNewVideo, getChannelsForCategory } from "../shared/state";
 import type { CategoryIconId, Channel, ExtensionState, SidebarMode } from "../shared/types";
 
 export interface SidebarSection {
@@ -172,9 +172,10 @@ const renderModeToggle = (state: ExtensionState, handlers: SidebarHandlers) => {
 };
 
 const renderChannel = (channel: Channel, handlers: SidebarHandlers) => {
+  const hasNewVideo = channelHasNewVideo(channel);
   const item = createElement("button", "ytdlp-channel");
   item.type = "button";
-  item.title = channel.name;
+  item.title = hasNewVideo ? `${channel.name}（有新视频）` : channel.name;
   item.addEventListener("click", () => handlers.onOpenChannel(channel));
 
   const avatar = createElement("span", "ytdlp-channel-avatar");
@@ -190,6 +191,11 @@ const renderChannel = (channel: Channel, handlers: SidebarHandlers) => {
     avatar.append(image);
   } else {
     avatar.textContent = channelInitial(channel.name);
+  }
+  if (hasNewVideo) {
+    const dot = createElement("span", "ytdlp-channel-dot");
+    dot.setAttribute("aria-hidden", "true");
+    avatar.append(dot);
   }
 
   const label = createElement("span", "ytdlp-channel-label", channel.name);
@@ -358,6 +364,7 @@ export const SIDEBAR_STYLES = `
   padding: 0 6px;
 }
 .ytdlp-channel-avatar {
+  position: relative;
   width: 24px;
   height: 24px;
   border-radius: 50%;
@@ -372,5 +379,15 @@ export const SIDEBAR_STYLES = `
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+.ytdlp-channel-dot {
+  position: absolute;
+  top: -1px;
+  right: -1px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ef4444;
+  border: 2px solid var(--yt-spec-base-background, #fff);
 }
 `;

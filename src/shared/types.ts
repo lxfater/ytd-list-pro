@@ -18,6 +18,12 @@ export interface Channel {
   url: string;
   subscribedAt?: number;
   discoveredAt?: number;
+  /** Timestamp (ms) of the newest video found the last time we checked the channel's feed. */
+  latestVideoAt?: number;
+  /** Timestamp (ms) of the newest video the user has acknowledged (dot clears at/above this). */
+  seenVideoAt?: number;
+  /** Timestamp (ms) we last polled this channel's feed, used to round-robin checks. */
+  feedCheckedAt?: number;
 }
 
 export interface Category {
