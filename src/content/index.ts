@@ -19,7 +19,9 @@ import {
   activeStateStorageKey,
   DEFAULT_ACCOUNT_ID,
   isExtensionContextInvalidated,
+  loadLegacyBackupState,
   loadOrImportInitialState,
+  restoreLegacyBackup,
   updateState
 } from "../shared/storage";
 import type { Channel, ChannelSortMode, ExtensionState, SidebarMode } from "../shared/types";
@@ -344,12 +346,27 @@ const collectAndSaveSubscriptions = async (): Promise<CollectSubscriptionsRespon
   return { ok: true, channels, source: "youtube-session" };
 };
 
+// Offer legacy-backup recovery when this account has no categories yet but a
+// pre-account backup with categories exists (i.e. another account adopted the
+// data during the per-account migration).
+const computeCanRestoreLegacy = async (): Promise<boolean> => {
+  if (!activatedAccountId || activatedAccountId === DEFAULT_ACCOUNT_ID) {
+    return false;
+  }
+  if (currentState && currentState.categoryOrder.length > 0) {
+    return false;
+  }
+  const backup = await loadLegacyBackupState();
+  return Boolean(backup && backup.categoryOrder.length > 0);
+};
+
 function openManager() {
   void safeAsync(async () => {
     await ensureAccountActive();
     currentState = currentState ?? (await loadOrImportInitialState());
     managerOpen = true;
     managerUi.status = "准备就绪";
+    managerUi.canRestoreLegacy = await computeCanRestoreLegacy();
     mountManager(currentState);
   });
 }
@@ -608,6 +625,24 @@ const managerHandlers = {
       });
     });
     input.click();
+  },
+  onRestoreLegacy() {
+    void safeAsync(async () => {
+      const restored = await restoreLegacyBackup();
+      if (!restored) {
+        managerUi.status = "没有找到可恢复的旧数据";
+        managerUi.canRestoreLegacy = false;
+        if (currentState) {
+          mountManager(currentState);
+        }
+        return;
+      }
+      currentState = restored;
+      managerUi.canRestoreLegacy = false;
+      managerUi.selectedChannelIds = [];
+      managerUi.status = `已恢复旧数据：${restored.categoryOrder.length} 个分类、${Object.keys(restored.channels).length} 个频道。建议点击「刷新频道」同步最新订阅。`;
+      refreshViews(currentState);
+    });
   },
   onOpenChannel: openChannel,
   onSortChange(sortMode: ChannelSortMode) {

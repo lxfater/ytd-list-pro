@@ -10,6 +10,7 @@ import {
   loadActiveAccountId,
   loadOrImportInitialState,
   loadState,
+  restoreLegacyBackup,
   saveState,
   STORAGE_STATE_KEY,
   updateState
@@ -131,5 +132,28 @@ describe("per-account storage", () => {
     const storage = createMemoryStorageArea();
     await activateAccount("acc-9", storage);
     expect(await loadActiveAccountId(storage)).toBe("acc-9");
+  });
+
+  it("restores the legacy backup into the current account on demand", async () => {
+    const storage = createMemoryStorageArea({ [STORAGE_STATE_KEY]: legacyState() });
+    // acc-1 adopted the legacy data during migration...
+    await activateAccount("acc-1", storage);
+    // ...but the data really belongs to acc-2, which starts empty.
+    await activateAccount("acc-2", storage);
+    expect((await loadState(storage)).categoryOrder).toEqual([]);
+
+    const restored = await restoreLegacyBackup(storage);
+    expect(restored?.categoryOrder).toEqual(["cat-old"]);
+    expect((await loadState(storage)).categoryOrder).toEqual(["cat-old"]);
+  });
+
+  it("does not restore anything for the default account or without a backup", async () => {
+    const empty = createMemoryStorageArea();
+    await activateAccount("acc-1", empty);
+    expect(await restoreLegacyBackup(empty)).toBeUndefined();
+
+    const withBackup = createMemoryStorageArea({ [STORAGE_STATE_KEY]: legacyState() });
+    await activateAccount(undefined, withBackup);
+    expect(await restoreLegacyBackup(withBackup)).toBeUndefined();
   });
 });

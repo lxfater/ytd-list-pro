@@ -92,6 +92,7 @@ const handlers = () => ({
   onMoveSelected: vi.fn(),
   onExport: vi.fn(),
   onImport: vi.fn(),
+  onRestoreLegacy: vi.fn(),
   onOpenChannel: vi.fn(),
   onSortChange: vi.fn(),
   onDragCategoryStart: vi.fn(),
@@ -103,6 +104,20 @@ const handlers = () => ({
 });
 
 describe("renderManager", () => {
+  it("shows a legacy-restore banner only when recovery is possible", () => {
+    const root = document.createElement("div");
+    const managerHandlers = handlers();
+
+    renderManager(root, createState(), baseUi({ canRestoreLegacy: true }), managerHandlers);
+    const restore = root.querySelector<HTMLButtonElement>(".ytdlp-manager-restore-button");
+    expect(restore?.textContent).toBe("恢复旧数据");
+    restore?.click();
+    expect(managerHandlers.onRestoreLegacy).toHaveBeenCalled();
+
+    renderManager(root, createState(), baseUi(), managerHandlers);
+    expect(root.querySelector(".ytdlp-manager-restore")).toBeNull();
+  });
+
   it("renders category and channel management inside a YouTube drawer", () => {
     const root = document.createElement("div");
     const managerHandlers = handlers();
