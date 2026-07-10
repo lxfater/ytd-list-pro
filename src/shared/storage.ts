@@ -151,6 +151,52 @@ export async function activateAccount(
   return resolved;
 }
 
+export async function loadLegacyBackupState(
+  storageArea = getChromeStorageArea()
+): Promise<ExtensionState | undefined> {
+  if (!storageArea) {
+    return undefined;
+  }
+  try {
+    const result = await storageArea.get(STORAGE_STATE_KEY);
+    const state = result[STORAGE_STATE_KEY];
+    return isExtensionState(state) ? state : undefined;
+  } catch (error) {
+    if (isExtensionContextInvalidated(error)) {
+      return undefined;
+    }
+    throw error;
+  }
+}
+
+/**
+ * Copy the pre-account (legacy) backup into the currently active account and
+ * mark that account as the legacy owner. Used to recover when the wrong
+ * account adopted the data during the per-account migration.
+ */
+export async function restoreLegacyBackup(
+  storageArea = getChromeStorageArea()
+): Promise<ExtensionState | undefined> {
+  if (!storageArea || activeAccountId === DEFAULT_ACCOUNT_ID) {
+    return undefined;
+  }
+  const backup = await loadLegacyBackupState(storageArea);
+  if (!backup) {
+    return undefined;
+  }
+  try {
+    await storageArea.set({
+      [activeStateStorageKey()]: backup,
+      [STORAGE_LEGACY_OWNER_KEY]: activeAccountId
+    });
+  } catch (error) {
+    if (!isExtensionContextInvalidated(error)) {
+      throw error;
+    }
+  }
+  return backup;
+}
+
 export async function loadActiveAccountId(storageArea = getChromeStorageArea()): Promise<string> {
   if (!storageArea) {
     return DEFAULT_ACCOUNT_ID;

@@ -231,20 +231,20 @@ describe("legacy import", () => {
 
 describe("searchChannels", () => {
   const channels = [
-    channel("UC-a", "李永乐老师"),
-    channel("UC-b", "Fireship"),
-    channel("UC-c", "Coding Train")
+    channel("UC-a", "中文示例频道"),
+    channel("UC-b", "Demoship"),
+    channel("UC-c", "Coding Demo")
   ];
 
   it("matches case-insensitive substrings of name and handle", () => {
-    expect(searchChannels(channels, "fire")).toEqual([channels[1]]);
-    expect(searchChannels(channels, "永乐")).toEqual([channels[0]]);
+    expect(searchChannels(channels, "ship")).toEqual([channels[1]]);
+    expect(searchChannels(channels, "示例")).toEqual([channels[0]]);
     expect(searchChannels(channels, "@uc-c")).toEqual([channels[2]]);
   });
 
   it("matches multiple whitespace-separated keywords in any order", () => {
-    expect(searchChannels(channels, "train coding")).toEqual([channels[2]]);
-    expect(searchChannels(channels, "老师 李")).toEqual([channels[0]]);
+    expect(searchChannels(channels, "demo coding")).toEqual([channels[2]]);
+    expect(searchChannels(channels, "频道 中文")).toEqual([channels[0]]);
   });
 
   it("returns all channels for an empty or whitespace-only query", () => {
@@ -253,7 +253,7 @@ describe("searchChannels", () => {
   });
 
   it("returns nothing when a keyword does not match", () => {
-    expect(searchChannels(channels, "fireship 老师")).toEqual([]);
+    expect(searchChannels(channels, "demoship 示例")).toEqual([]);
   });
 });
 
@@ -262,7 +262,7 @@ describe("searchAllChannels", () => {
     const initial = createEmptyState();
     const withChannels = mergeSubscriptions(
       initial,
-      [channel("UC-a", "李永乐老师"), channel("UC-b", "Fireship"), channel("UC-c", "Coding Train")],
+      [channel("UC-a", "中文示例频道"), channel("UC-b", "Demoship"), channel("UC-c", "Coding Demo")],
       10
     );
     const withCategory = addCategory(withChannels, {
@@ -276,7 +276,7 @@ describe("searchAllChannels", () => {
 
   it("finds channels across every category and reports where they live", () => {
     const state = buildState();
-    const hits = searchAllChannels(state, "fire");
+    const hits = searchAllChannels(state, "ship");
     expect(hits).toHaveLength(1);
     expect(hits[0]?.channel.id).toBe("UC-b");
     expect(hits[0]?.categoryId).toBe("cat-dev");
@@ -284,7 +284,7 @@ describe("searchAllChannels", () => {
   });
 
   it("includes uncategorized channels in the results", () => {
-    const hits = searchAllChannels(buildState(), "永乐");
+    const hits = searchAllChannels(buildState(), "示例");
     expect(hits).toHaveLength(1);
     expect(hits[0]?.channel.id).toBe("UC-a");
     expect(hits[0]?.categoryId).toBe(UNCATEGORIZED_ID);

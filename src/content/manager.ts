@@ -19,6 +19,7 @@ export type ManagerUiState = {
   sortMode: ChannelSortMode;
   status: string;
   draft?: CategoryDraft;
+  canRestoreLegacy?: boolean;
 };
 
 export type ManagerHandlers = {
@@ -36,6 +37,7 @@ export type ManagerHandlers = {
   onMoveSelected(): void;
   onExport(): void;
   onImport(): void;
+  onRestoreLegacy(): void;
   onOpenChannel(channel: Channel): void;
   onSortChange(sortMode: ChannelSortMode): void;
   onDragCategoryStart(categoryId: string): void;
@@ -489,6 +491,17 @@ export function renderManager(
   moveTools.append(select, move);
   summary.append(summaryText, moveTools);
 
+  if (ui.canRestoreLegacy) {
+    const restoreBar = createElement("div", "ytdlp-manager-restore");
+    restoreBar.append(
+      createElement("span", undefined, "检测到升级前的分类数据备份，可以恢复到当前账号。")
+    );
+    const restore = createElement("button", "ytdlp-manager-primary ytdlp-manager-restore-button", "恢复旧数据");
+    restore.type = "button";
+    restore.addEventListener("click", handlers.onRestoreLegacy);
+    restoreBar.append(restore);
+    right.append(restoreBar);
+  }
   right.append(toolbar, summary, renderChannels(visibleChannels, selectedChannelIds, handlers, categoryLabels), createElement("div", "ytdlp-manager-status", ui.status));
   layout.append(left, right);
   drawer.append(layout);
@@ -643,6 +656,20 @@ export const MANAGER_STYLES = `
 .ytdlp-manager-category-count {
   color: var(--yt-spec-text-secondary, #606060);
   font-size: 12px;
+}
+.ytdlp-manager-restore {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--yt-spec-badge-chip-background, rgba(255, 196, 0, 0.12));
+  border: 1px solid var(--yt-spec-10-percent-layer, rgba(0, 0, 0, 0.12));
+  font-size: 13px;
+}
+.ytdlp-manager-restore-button {
+  flex: none;
 }
 .ytdlp-manager-channel-category {
   display: inline-block;

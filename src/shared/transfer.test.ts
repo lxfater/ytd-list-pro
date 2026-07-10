@@ -14,10 +14,10 @@ const buildState = () => {
   let state = createEmptyState();
   state = mergeSubscriptions(
     state,
-    [channel("UC-a", "Matt Wolfe", "@mreflow"), channel("UC-b", "李永乐老师", "@liyongle"), channel("UC-c", "Tech, With Tim", "@TechWithTim")],
+    [channel("UC-a", "Demo Alpha", "@demo-alpha"), channel("UC-b", "中文示例频道", "@demo-zhongwen"), channel("UC-c", "Demo, Beta Studio", "@demo-beta")],
     10
   );
-  state = addCategory(state, { id: "cat-ai", name: "AI大师", color: "#7c3aed", icon: "ai" });
+  state = addCategory(state, { id: "cat-ai", name: "AI示例", color: "#7c3aed", icon: "ai" });
   state = moveChannels(state, ["UC-a"], "cat-ai");
   return state;
 };
@@ -28,13 +28,13 @@ describe("buildCategoriesCsv", () => {
     expect(csv.startsWith("\uFEFF")).toBe(true);
     const lines = csv.replace("\uFEFF", "").trim().split("\r\n");
     expect(lines[0]).toBe("分类,频道名称,频道链接");
-    expect(lines).toContain("AI大师,Matt Wolfe,https://www.youtube.com/@mreflow");
-    expect(lines).toContain("未分类,李永乐老师,https://www.youtube.com/@liyongle");
+    expect(lines).toContain("AI示例,Demo Alpha,https://www.youtube.com/@demo-alpha");
+    expect(lines).toContain("未分类,中文示例频道,https://www.youtube.com/@demo-zhongwen");
   });
 
   it("quotes fields containing commas", () => {
     const csv = buildCategoriesCsv(buildState());
-    expect(csv).toContain('"Tech, With Tim"');
+    expect(csv).toContain('"Demo, Beta Studio"');
   });
 });
 
@@ -45,16 +45,16 @@ describe("parseCategoriesCsv", () => {
     expect(errors).toEqual([]);
     expect(items).toHaveLength(3);
     expect(items[0]?.categoryName).toBe("未分类");
-    const ai = items.find((item) => item.categoryName === "AI大师");
-    expect(ai?.channel.handle).toBe("@mreflow");
-    expect(ai?.channel.name).toBe("Matt Wolfe");
+    const ai = items.find((item) => item.categoryName === "AI示例");
+    expect(ai?.channel.handle).toBe("@demo-alpha");
+    expect(ai?.channel.name).toBe("Demo Alpha");
   });
 
   it("accepts two-column rows and infers the channel from the url", () => {
-    const { items, errors } = parseCategoriesCsv("编程,https://www.youtube.com/@TechWithTim\n");
+    const { items, errors } = parseCategoriesCsv("编程,https://www.youtube.com/@demo-beta\n");
     expect(errors).toEqual([]);
     expect(items[0]?.categoryName).toBe("编程");
-    expect(items[0]?.channel.id).toBe("handle:techwithtim");
+    expect(items[0]?.channel.id).toBe("handle:demo-beta");
   });
 
   it("supports /channel/UC... urls and english headers", () => {

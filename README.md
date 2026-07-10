@@ -44,8 +44,6 @@
 
 整理好之后，左侧边栏切换到「分类」模式，点击任意分类即可展开浏览其中的频道——从此告别一长串杂乱的订阅列表。日常使用还有更快的方式：在任意视频页或频道主页，订阅按钮旁会出现「加入分类」按钮，点开选一个分类即可完成归类，不用打开管理面板。
 
-日常使用时还有更快的方式：在任意视频页或频道主页，订阅按钮旁边会出现「加入分类」按钮，点开选一个分类即可完成归类，不用打开管理面板。
-
 ## 安装
 
 ### 方式一：下载 Release 安装包（推荐，无需构建）
@@ -76,8 +74,8 @@ npm run build
 
 | 分类 | 频道名称 | 频道链接 |
 | --- | --- | --- |
-| AI大师 | Matt Wolfe | https://www.youtube.com/@mreflow |
-| 编程 | Tech With Tim | https://www.youtube.com/@TechWithTim |
+| AI示例 | Demo Alpha | https://www.youtube.com/@demo-alpha |
+| 编程 | Demo Beta | https://www.youtube.com/@demo-beta |
 | 未分类 | | https://www.youtube.com/channel/UCxxxxxxxx |
 
 各列规则：

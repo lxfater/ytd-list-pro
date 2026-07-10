@@ -44,8 +44,6 @@ Follow steps ①②③ in the screenshot (the extension UI is in Chinese; Englis
 
 Once organized, switch the left sidebar to 分类 (Categories) mode and click any category to browse its channels — no more scrolling through one long, messy subscription list. There is an even faster way in daily use: on any watch or channel page, an 加入分类 (Add to category) button appears next to the subscribe button — click it and pick a category, no manager panel needed.
 
-There is an even faster way in daily use: on any watch page or channel page, an 加入分类 (Add to category) button appears next to the subscribe button. Click it and pick a category — done, without ever opening the manager panel.
-
 ## Install
 
 ### Option 1: Download from Releases (recommended, no build needed)
@@ -76,8 +74,8 @@ The manager panel toolbar has 导出 (Export) and 导入 (Import) buttons.
 
 | 分类 (Category) | 频道名称 (Channel Name) | 频道链接 (Channel URL) |
 | --- | --- | --- |
-| AI Masters | Matt Wolfe | https://www.youtube.com/@mreflow |
-| Coding | Tech With Tim | https://www.youtube.com/@TechWithTim |
+| AI Demo | Demo Alpha | https://www.youtube.com/@demo-alpha |
+| Coding | Demo Beta | https://www.youtube.com/@demo-beta |
 | 未分类 | | https://www.youtube.com/channel/UCxxxxxxxx |
 
 Column rules:
