@@ -1,6 +1,7 @@
 import { MESSAGE_TYPES, type ExtensionMessage } from "../shared/messages";
-import { loadOrImportInitialState } from "../shared/storage";
+import { configureStorageAccount, loadActiveAccountId, loadOrImportInitialState } from "../shared/storage";
 import { fetchAvatarDataUrl } from "./avatar-proxy";
+import { FEED_CHECK_ALARM_NAME, FEED_CHECK_INTERVAL_MINUTES, runFeedCheck } from "./feed-check";
 
 const isRuntimeAvailable = () => {
   try {
@@ -10,11 +11,22 @@ const isRuntimeAvailable = () => {
   }
 };
 
+const scheduleFeedCheckAlarm = () => {
+  if (!chrome.alarms) {
+    return;
+  }
+  chrome.alarms.create(FEED_CHECK_ALARM_NAME, {
+    delayInMinutes: 1,
+    periodInMinutes: FEED_CHECK_INTERVAL_MINUTES
+  });
+};
+
 const bootstrap = async () => {
   if (!isRuntimeAvailable()) {
     return;
   }
   await loadOrImportInitialState();
+  scheduleFeedCheckAlarm();
 };
 
 const isYouTubeUrl = (url: string | undefined): boolean => url?.startsWith("https://www.youtube.com/") === true;
@@ -88,6 +100,12 @@ chrome.action.onClicked.addListener((tab) => {
   void openManagerInTab(tab);
 });
 
+chrome.alarms?.onAlarm.addListener((alarm) => {
+  if (alarm.name === FEED_CHECK_ALARM_NAME) {
+    void runFeedCheck();
+  }
+});
+
 chrome.runtime.onMessage.addListener((message: ExtensionMessage, _sender, sendResponse) => {
   if (message.type === MESSAGE_TYPES.OPEN_CHANNEL) {
     chrome.tabs.create({ url: message.url });
@@ -96,7 +114,12 @@ chrome.runtime.onMessage.addListener((message: ExtensionMessage, _sender, sendRe
   }
 
   if (message.type === MESSAGE_TYPES.GET_STATE) {
-    void loadOrImportInitialState()
+    // Same account-key trap as feed-check.ts: the background's storage
+    // module never learns the active YouTube account on its own, so resync
+    // from the persisted account id before touching state.
+    void loadActiveAccountId()
+      .then((accountId) => configureStorageAccount(accountId))
+      .then(() => loadOrImportInitialState())
       .then((state) => sendResponse({ ok: true, state }))
       .catch((error: unknown) => sendResponse({ ok: false, error: String(error) }));
     return true;
